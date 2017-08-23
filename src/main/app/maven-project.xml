@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
 xmlns="http://www.mulesoft.org/schema/mule/core"
 xmlns:json="http://www.mulesoft.org/schema/mule/json"
 xmlns:db="http://www.mulesoft.org/schema/mule/db"
@@ -14,7 +14,8 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
-http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
 	<http:listener-config name="httpList" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
 
 	<spring:beans>
@@ -36,7 +37,16 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 			<db:parameterized-query><![CDATA[SELECT * FROM FLIGHTS]]></db:parameterized-query>
 		</db:select>
 		<json:object-to-json-transformer doc:name="Object to JSON" />
-        <set-property propertyName="#['Content-Type']" value="#['application/json']" doc:name="Property"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+            <dw:set-property propertyName="content-type"><![CDATA[%dw 1.0
+%output application/java
+---
+"application/json"]]></dw:set-property>
+        </dw:transform-message>
 		<jms:outbound-endpoint queue="flights" connector-ref="Active_MQ" doc:name="JMS" />
 	</flow>
 
